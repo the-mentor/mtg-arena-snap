@@ -1,0 +1,243 @@
+name: my-super-snap
+version: '0.1'
+icon: desktop/icon.png
+summary: My Super Snap
+description: >
+  My Super Snap running in WINE.
+
+grade: stable
+confinement: strict
+base: core18
+
+architectures:
+  - build-on: amd64
+  - build-on: i386
+
+environment:
+  INSTALL_URL: "<<INSERT URL TO PUBLICLY AVAILABLE INSTALLER>>"
+  TRICKS: "corefonts vcrun2017"
+  WINEPREFIX: "$SNAP_USER_COMMON/.wine"
+  DLLOVERRIDES: "mscoree,mshtml=" # Prevent pop-ups about Wine Mono and Wine Gecko
+  LC_ALL: "C.UTF-8"
+  SNAP_TITLE: "$SNAPCRAFT_PROJECT_SUMMARY"
+  SNAP_ICON: "$SNAP/meta/gui/icon.png"
+  SNAP_SUPPORT_URL: "<<INSERT SUPPORT URL HERE>>"
+
+apps:
+  super-snap:
+    command: bin/sommelier "$WINEPREFIX/drive_c/Program Files/SuperSnap/SuperSnap.exe"
+    desktop: usr/share/applications/desktop-file.desktop
+    plugs:
+      - bluez
+      - desktop
+      - desktop-legacy
+      - hardware-observe
+      - home
+      - joystick
+      - network
+      - network-bind
+      - opengl
+      - process-control
+      - pulseaudio
+      - screen-inhibit-control
+      - wayland
+      - x11
+  enable-dxvk:
+    command: bin/sommelier $SNAP/dxvk/setup_dxvk.sh install --without-dxgi
+    plugs:
+      - bluez
+      - desktop
+      - desktop-legacy
+      - hardware-observe
+      - home
+      - joystick
+      - network
+      - network-bind
+      - opengl
+      - process-control
+      - pulseaudio
+      - screen-inhibit-control
+      - wayland
+      - x11
+  wineboot:
+    command: bin/sommelier $SNAP/bin/wineboot
+    plugs:
+      - desktop
+      - desktop-legacy
+      - pulseaudio
+      - wayland
+      - x11
+  winecfg:
+    command: bin/sommelier $SNAP/bin/winecfg
+    plugs:
+      - desktop
+      - desktop-legacy
+      - pulseaudio
+      - wayland
+      - x11
+  winetricks:
+    command: bin/sommelier $SNAP/bin/winetricks prefix="$WINEPREFIX"
+    plugs:
+      - desktop
+      - desktop-legacy
+      - network
+      - pulseaudio
+      - wayland
+      - x11
+
+parts:
+  desktop:
+    plugin: dump
+    source: desktop
+    organize:
+      icon.png: usr/share/icons/icon.png
+      desktop-file.desktop: usr/share/applications/desktop-file.desktop
+
+  add-repos:
+    plugin: nil
+    override-build: |
+      if [ "$SNAPCRAFT_ARCH_TRIPLET" = "x86_64-linux-gnu" ]; then
+        dpkg --add-architecture i386
+        apt update
+      fi
+      wget -nc https://dl.winehq.org/wine-builds/winehq.key
+      wget -nc https://download.opensuse.org/repositories/Emulators:/Wine:/Debian/xUbuntu_18.04/Release.key
+      apt-key add winehq.key
+      apt-key add Release.key
+      rm -f winehq.key Release.key
+      add-apt-repository 'deb https://dl.winehq.org/wine-builds/ubuntu/ bionic main'
+      add-apt-repository 'deb https://download.opensuse.org/repositories/Emulators:/Wine:/Debian/xUbuntu_18.04/ ./'
+    build-packages:
+      - software-properties-common
+      - wget
+
+  dxvk:
+    plugin: dump
+    source: https://github.com/doitsujin/dxvk/releases/download/v1.2/dxvk-1.2.tar.gz
+    override-pull: |
+      DOWNLOAD_URL="$(curl --silent https://api.github.com/repos/doitsujin/dxvk/releases/latest | jq .assets[0].browser_download_url | sed -e 's/"//g')"
+      if [ -n "$DOWNLOAD_URL" ]; then
+        curl --silent -L "$DOWNLOAD_URL" | tar zx --strip-components=1
+      fi
+    build-packages:
+      - curl
+      - jq
+    organize:
+      setup_dxvk.sh: dxvk/setup_dxvk.sh
+      x32: dxvk/x32
+      x64: dxvk/x64
+
+  wine-runtime:
+    plugin: nil
+    stage-packages:
+      # gtk
+      - libgdk-pixbuf2.0-0
+      - libgtk-3-0
+      - libgtk-3-bin
+      # miscellaneous desktop stuff
+      - adwaita-icon-theme
+      - dmz-cursor-theme
+      - gnome-themes-standard
+      - shared-mime-info
+      - ttf-ubuntu-font-family
+      ## Required for authentication - Observed in Steam and Track Mania
+      - samba-libs
+      - winbind
+      # vaapi
+      - libva2
+      - va-driver-all
+      ## opengl
+      - libglu1-mesa
+      # - mesa-utils
+      ## vulkan
+      - libvulkan1
+      - mesa-vulkan-drivers
+      # - vulkan-utils
+      ## wine
+      - wine-devel
+      - on amd64:
+        - libgdk-pixbuf2.0-0:i386
+        - libgtk-3-0:i386
+        - libgtk-3-bin:i386
+        - samba-libs:i386
+        - winbind:i386
+        - libva2:i386
+        - va-driver-all:i386
+        - libglu1-mesa:i386
+        - libvulkan1:i386
+    stage:
+      - -etc/init
+      - -etc/init.d
+      - -etc/logrotate.d
+      - -usr/share/apps
+      - -usr/share/applications
+      - -usr/share/bug
+      - -usr/share/doc
+      - -usr/share/doc-base
+      - -usr/share/debhelper
+      - -usr/share/lintian
+      - -usr/share/man
+      - -usr/share/pixmaps
+      - -usr/share/pkgconfig
+    after:
+      - add-repos
+
+  sommelier:
+    plugin: dump
+    source: scripts
+    organize:
+      'snap-*': bin/
+      'sommelier': bin/
+      'winetricks': bin/
+      'zenity': bin/
+    build-packages:
+      - curl
+    stage-packages:
+      - cabextract         # winetricks
+      - libgdk-pixbuf2.0-0 # yad
+      - libgtk-3-0         # yad
+      - libnotify4         # yad
+      - libnotify-bin      # sommelier
+      - perl-base          # winetricks
+      - rsync
+      - shared-mime-info
+      - unzip              # winetricks
+      - wget               # winetricks
+      - yad                # winetricks
+      - x11-xserver-utils  # for xrandr to set virtual desktop
+    override-pull: |
+      snapcraftctl pull
+
+      curl --silent --show-error --location "https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks" -o winetricks
+      chmod +x winetricks
+    stage:
+      - -etc/init
+      - -etc/init.d
+      - -etc/logrotate.d
+      - -usr/bin/fc-*
+      - -usr/bin/gtk-*
+      - -usr/lib/dconf/dconf-service
+      - -usr/lib/glib-networking/glib-pacrunner
+      - -usr/share/GConf
+      - -usr/share/aclocal
+      - -usr/share/apport
+      - -usr/share/apps
+      - -usr/share/bash-completion
+      - -usr/share/bug
+      - -usr/share/debhelper
+      - -usr/share/doc
+      - -usr/share/doc-base
+      - -usr/share/icons/Adwaita
+      - -usr/share/icons/Humanity*
+      - -usr/share/icons/LoginIcons
+      - -usr/share/icons/ubuntu-mono*
+      - -usr/share/info
+      - -usr/share/kde4
+      - -usr/share/lintian
+      - -usr/share/menu
+      - -usr/share/man
+      - -usr/share/perl5
+      - -usr/share/pixmaps
+      - -usr/share/pkgconfig
+    after:
+      - add-repos
