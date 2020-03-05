@@ -78,7 +78,8 @@ function install_app() {
   fi
 
   # Installs the wine application
-  "${WINELOADER}" "${LOCAL_INSTALL_EXE}" /silent
+  #"${WINELOADER}" "${LOCAL_INSTALL_EXE}" /silent
+  "${WINELOADER}" msiexec /i "${LOCAL_INSTALL_EXE}" /q
 
   if [ -n "${INSTALL_URL}" ]; then
     # Removes the cached installer
@@ -174,6 +175,9 @@ append_dir PATH "$SNAP/usr/bin"
 
 # If we've been given and installer URL derive the filename
 if [ -n "${INSTALL_URL}" ]; then
+  #INSTALL_EXE="$(basename "${INSTALL_URL}")"
+  INSTALL_URL="$(curl -s "${INSTALL_URL}" | jq -r '.CurrentInstallerURL')"
+  #INSTALL_EXE="$(basename "$(curl -s "${INSTALL_URL}" | jq -r '.CurrentInstallerURL')")"
   INSTALL_EXE="$(basename "${INSTALL_URL}")"
 fi
 

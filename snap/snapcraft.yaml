@@ -1,9 +1,9 @@
-name: my-super-snap
-version: '0.1'
+name: mtg-arena
+version: '0.2-get-latest-msi'
 icon: desktop/icon.png
-summary: My Super Snap
+summary: MTGArena
 description: >
-  My Super Snap running in WINE.
+  MTG Arena running in WINE.
 
 grade: stable
 confinement: strict
@@ -14,18 +14,18 @@ architectures:
   - build-on: i386
 
 environment:
-  INSTALL_URL: "<<INSERT URL TO PUBLICLY AVAILABLE INSTALLER>>"
-  TRICKS: "corefonts vcrun2017"
+  INSTALL_URL: "https://mtgarena.downloads.wizards.com/Live/Windows32/version"
+  TRICKS: "corefonts vcrun2017 dotnet472 xact arial win10"
   WINEPREFIX: "$SNAP_USER_COMMON/.wine"
   DLLOVERRIDES: "mscoree,mshtml=" # Prevent pop-ups about Wine Mono and Wine Gecko
   LC_ALL: "C.UTF-8"
   SNAP_TITLE: "$SNAPCRAFT_PROJECT_SUMMARY"
   SNAP_ICON: "$SNAP/meta/gui/icon.png"
-  SNAP_SUPPORT_URL: "<<INSERT SUPPORT URL HERE>>"
+  SNAP_SUPPORT_URL: "https://example.com/"
 
 apps:
   super-snap:
-    command: bin/sommelier "$WINEPREFIX/drive_c/Program Files/SuperSnap/SuperSnap.exe"
+    command: bin/sommelier "$WINEPREFIX/drive_c/Program Files/Wizards of the Coast/MTGA/MTGA.exe"
     desktop: usr/share/applications/desktop-file.desktop
     plugs:
       - bluez
@@ -205,6 +205,8 @@ parts:
       - wget               # winetricks
       - yad                # winetricks
       - x11-xserver-utils  # for xrandr to set virtual desktop
+      - jq                 # for converting from json
+      - curl               # for getting mtg latest version json 
     override-pull: |
       snapcraftctl pull
 
@@ -241,3 +243,7 @@ parts:
       - -usr/share/pkgconfig
     after:
       - add-repos
+
+layout:
+  /usr/share/alsa:
+    bind: $SNAP/usr/share/alsa

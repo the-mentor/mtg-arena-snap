@@ -1,8 +1,8 @@
 [Desktop Entry]
 Type=Application
 Encoding=UTF-8
-Name=My Super Snap
-Comment=My Super Snap
+Name=MTG Arena
+Comment=MTG Arena
 Exec=my-super-snap
 Icon=/usr/share/icons/icon.png
 Categories=Game;
