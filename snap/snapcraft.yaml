@@ -1,5 +1,5 @@
 name: mtg-arena
-version: '0.2-get-latest-msi'
+version: '0.3-get-latest-msi'
 icon: desktop/icon.png
 summary: MTGArena
 description: >
@@ -21,7 +21,7 @@ environment:
   LC_ALL: "C.UTF-8"
   SNAP_TITLE: "$SNAPCRAFT_PROJECT_SUMMARY"
   SNAP_ICON: "$SNAP/meta/gui/icon.png"
-  SNAP_SUPPORT_URL: "https://example.com/"
+  SNAP_SUPPORT_URL: "https://github.com/the-mentor/mtg-arena-snap"
 
 apps:
   super-snap:
@@ -38,7 +38,7 @@ apps:
       - network-bind
       - opengl
       - process-control
-      - pulseaudio
+      - audio-playback
       - screen-inhibit-control
       - wayland
       - x11
