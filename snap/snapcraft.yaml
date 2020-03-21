@@ -24,7 +24,7 @@ environment:
   SNAP_SUPPORT_URL: "https://example.com/"
 
 apps:
-  super-snap:
+  mtg-arena:
     command: bin/sommelier "$WINEPREFIX/drive_c/Program Files/Wizards of the Coast/MTGA/MTGA.exe"
     desktop: usr/share/applications/desktop-file.desktop
     plugs:
