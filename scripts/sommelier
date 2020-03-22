@@ -260,6 +260,15 @@ if [ "$SNAP_ARCH" = "amd64" ]; then
 fi
 append_dir LD_LIBRARY_PATH "$LIBGL_DRIVERS_PATH"
 
+# Enable Nvidia dedicated graphics
+# cf. https://forum.snapcraft.io/t/im-building-a-mtg-arena-snap-and-have-some-issues/15826
+if [[ $(snapctl get enable-nvidia-graphics) =~ "true" ]]; then
+  export __NVIDIA_PRIME_RENDER_OFFLOAD=1
+  export __GLX_VENDOR_LIBRARY_NAME=“nvidia”
+  echo "Using Nvidia graphics"
+fi
+# TODO: Do we need something similar for other brands?
+
 # Workaround in snapd for proprietary nVidia drivers mounts the drivers in
 # /var/lib/snapd/lib/gl that needs to be in LD_LIBRARY_PATH
 # Without that OpenGL using apps do not work with the nVidia drivers.
