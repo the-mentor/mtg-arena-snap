@@ -1,0 +1,5 @@
+#!/bin/sh -e
+
+# TODO: add validation for config values?
+# For now, accept anything:
+exit 0

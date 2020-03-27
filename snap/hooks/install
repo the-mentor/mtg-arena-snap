@@ -1,0 +1,4 @@
+#!/bin/sh -e
+
+# Set default values for custom configuration
+snapctl set enable-nvidia-graphics=false
